@@ -31,7 +31,7 @@ class BlogApi(viewsets.ViewSet):
             return Response(
                 BlogSerializer(blog).data, status=status.HTTP_201_CREATED
             )
-
+            print("Hello")
             # serializer = BlogSerializer(data=request.data)
             # if serializer.is_valid():
             #     serializer.save()
