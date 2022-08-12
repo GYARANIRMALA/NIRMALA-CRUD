@@ -14,7 +14,7 @@ class BlogApi(viewsets.ViewSet):
 
             if request.data["order"] < 0 :
                 return Response({"error": "Order should not be negitive"}, status=status.HTTP_400_BAD_REQUEST)
-
+   
             blog = Blog(
                 title = request.data["title"],
                 description = request.data["description"],
