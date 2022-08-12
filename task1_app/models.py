@@ -3,9 +3,9 @@ import uuid
 
 class Blog(models.Model):
     class StatusTypes(models.TextChoices):
-        draft = "draft"
-        published = "published"
-        pending = "pending"
+        Draft = "Draft"
+        Published = "Published"
+        Pending = "Pending"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=50,default="")

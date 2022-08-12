@@ -9,7 +9,7 @@ class BlogApi(viewsets.ViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            if request.data["status"] not in [Blog.StatusTypes.draft,Blog.StatusTypes.published,Blog.StatusTypes.pending]:
+            if request.data["status"] not in [Blog.StatusTypes.Draft,Blog.StatusTypes.Published,Blog.StatusTypes.Pending]:
                 return Response({"error":"Invalid status"},status=status.HTTP_400_BAD_REQUEST)
 
             if request.data["order"] < 0 :
@@ -83,14 +83,10 @@ class BlogApi(viewsets.ViewSet):
                 blog.updated_by = request.data["updated_by"]
             if "status" in request.data:
                 try:
-                    existing_blog = Blog.objects.get(status=request.data["status"])
-                    if blog.id != existing_blog.id:
-                        return Response({"error": "status should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
+                    if request.data["status"] not in [Blog.StatusTypes.Draft,Blog.StatusTypes.Published,Blog.StatusTypes.Pending]:
+                        return Response({"error":"Invalid status"},status=status.HTTP_400_BAD_REQUEST)
                 except Exception:
                     pass
-                blog.status = request.data["status"]
-
-                # return Response({"error": "Status should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
             if "active" in request.data:
                 return Response({"error": "active should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
             if "order" in request.data:
