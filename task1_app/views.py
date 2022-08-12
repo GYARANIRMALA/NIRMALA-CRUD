@@ -14,7 +14,7 @@ class BlogApi(viewsets.ViewSet):
 
             if request.data["order"] < 0 :
                 return Response({"error": "Order should not be negitive"}, status=status.HTTP_400_BAD_REQUEST)
-
+   
             blog = Blog(
                 title = request.data["title"],
                 description = request.data["description"],
@@ -31,7 +31,7 @@ class BlogApi(viewsets.ViewSet):
             return Response(
                 BlogSerializer(blog).data, status=status.HTTP_201_CREATED
             )
-
+            print("Hello")
             # serializer = BlogSerializer(data=request.data)
             # if serializer.is_valid():
             #     serializer.save()
