@@ -45,7 +45,7 @@ class BlogApi(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            blogs = Blog.objects.filter(active=T).order_by('views')
+            blogs = Blog.objects.filter(active=True).order_by('order')
             return Response(
                 BlogSerializer(blogs, many=True).data, status=status.HTTP_200_OK
             )
