@@ -45,7 +45,7 @@ class BlogApi(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            blogs = Blog.objects.filter().order_by('views')
+            blogs = Blog.objects.filter(active=T).order_by('views')
             return Response(
                 BlogSerializer(blogs, many=True).data, status=status.HTTP_200_OK
             )
@@ -105,9 +105,8 @@ class BlogApi(viewsets.ViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            blog = Blog.objects.get(active=True,id=kwargs["pk"])
-            blog.active = False
-            blog.save()
+            blog = Blog.objects.get(id=kwargs["pk"])
+            blog.delete()
             return Response(
                 {"error" : "This Book was Deleted"},
                 status=status.HTTP_200_OK
