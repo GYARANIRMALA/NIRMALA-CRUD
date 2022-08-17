@@ -24,5 +24,25 @@ class Blog(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
 
-    def __str__(name):
-        return self.name
+    def __str__(self):
+        return self.id
+
+class Comments(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    comment = models.CharField(max_length=50,default="")
+
+    blog_id = models.ForeignKey(Blog, related_name="blog_id", on_delete=models.CASCADE, null=True, blank=True)
+    likes = models.IntegerField()
+    dislike = models.IntegerField()
+
+    status = models.CharField(max_length=50,default="")
+    active = models.BooleanField(default=True)
+    order = models.IntegerField()
+
+    created_by = models.CharField(max_length=50,default="")
+    updated_by = models.CharField(max_length=50,default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.id

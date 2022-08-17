@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from task1_app.models import Blog
-from task1_app.serializers import BlogSerializer
+from task1_app.models import Blog, Comments
+from task1_app.serializers import BlogSerializer, CommentsSerializer
 import requests
 from datetime import datetime
 
@@ -117,3 +117,87 @@ class BlogApi(viewsets.ViewSet):
 
 
 
+class CommentsApi(viewsets.ViewSet):
+
+    def create(self, request, *args, **kwargs):
+        try:
+            comment = Comments(
+                comment = request.data["comment"],
+                blog_id = Blog.objects.get(id=request.data["blog_id"]),
+                likes = request.data["likes"],
+                dislike = request.data["dislike"],
+                status = request.data["status"],
+                active = request.data["active"],
+                order = request.data["order"],
+                created_by = request.data["created_by"],
+                updated_by = request.data["updated_by"],
+            )
+            comment.save()
+            return Response(
+                CommentsSerializer(comment).data, status=status.HTTP_201_CREATED
+            )
+        except Exception as err:
+            print("error CommentsApi create",err)
+            return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            comments = Comments.objects.filter().order_by('comment')
+            return Response(
+                CommentsSerializer(comments, many=True).data, status=status.HTTP_200_OK
+            )
+        except Exception as err:
+            print("error Comments get")
+            return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            comment = Comments.objects.get(id=kwargs["pk"])
+            return Response(
+                CommentsSerializer(comment).data, status=status.HTTP_200_OK
+            )
+        except Exception as err:
+            print("error Commentsapi read")
+            return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            comment = Comments.objects.get(id=kwargs["pk"])
+
+            if "comment" in request.data:
+                comment.comment = request.data["comment"]
+            if "blog_id" in request.data:
+                comment.blog_id = Blog.objects.get(blog_id=request.data["blog_id"])
+            if "likes" in request.data:
+                comment.likes = request.data["likes"]
+            if "dislike" in request.data:
+                comment.dislike = request.data["dislike"]
+            if "status" in request.data:
+                comment.status = request.data["status"]
+            if "active" in request.data:
+                comment.active = request.data["active"]
+            if "created_by" in request.data:
+                comment.created_by = request.data["created_by"]
+            if "updated_by" in request.data:
+                comment.updated_by = request.data["updated_by"]
+            comment.save()
+            return Response(
+                CommentsSerializer(comment).data, status=status.HTTP_200_OK
+            )
+        except Exception as err:
+            print("error CommentApi update")
+            return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            comment = Comments.objects.get(id=kwargs["pk"])
+            comment.delete()
+            return Response(
+                status=status.HTTP_200_OK
+            )
+        except Exception as err:
+            print("error CommentsApi destroy",err)
+            return Response({"error": "This Object was Deleted"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+             
