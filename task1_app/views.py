@@ -4,6 +4,10 @@ from task1_app.models import Blog, Comments
 from task1_app.serializers import BlogSerializer, CommentsSerializer
 import requests
 from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt,csrf_protect #Add this
+from django.http import HttpResponse, JsonResponse
+import uuid
+
 
 class BlogApi(viewsets.ViewSet):
 
@@ -45,9 +49,24 @@ class BlogApi(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
+            print("In blogs list")
             blogs = Blog.objects.filter(active=True).order_by('order')
+            blogs_serializer = BlogSerializer(blogs, many=True).data
+            try:
+                for data in blogs_serializer:
+                    try:
+                        comments_list = Comments.objects.filter(blog_id=data["id"])
+                        print("comments_list --->",comments_list)
+                        comments_serailizer = CommentsSerializer(comments_list,many=True).data
+                        data["comments"] = comments_serailizer
+                    except Exception as err:
+                        print("error1 --->",err)
+                        pass
+            except Exception as err:                        
+                print("error2 --->",err)
+                pass
             return Response(
-                BlogSerializer(blogs, many=True).data, status=status.HTTP_200_OK
+                blogs_serializer, status=status.HTTP_200_OK
             )
         except Exception as err:
             print("error BlogApis get")
@@ -55,7 +74,7 @@ class BlogApi(viewsets.ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            blog = Blog.objects.get(id=kwargs["pk"])
+            blog = Blog.objects.get(id=kwargs['pk'])
             return Response(
                 BlogSerializer(blog).data, status=status.HTTP_200_OK
             )
@@ -65,7 +84,7 @@ class BlogApi(viewsets.ViewSet):
 
     def update(self, request, *args,**kwargs):
         try:
-            blog = Blog.objects.get(id=kwargs["pk"])
+            blog = Blog.objects.get(id=kwargs['pk'])
 
             if "title" in request.data:
                 blog.title = request.data["title"]
@@ -105,7 +124,7 @@ class BlogApi(viewsets.ViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            blog = Blog.objects.get(id=kwargs["pk"])
+            blog = Blog.objects.get(id=kwargs['pk'])
             blog.delete()
             return Response(
                 {"error" : "This Book was Deleted"},
@@ -119,11 +138,12 @@ class BlogApi(viewsets.ViewSet):
 
 class CommentsApi(viewsets.ViewSet):
 
+    @csrf_exempt
     def create(self, request, *args, **kwargs):
         try:
             comment = Comments(
                 comment = request.data["comment"],
-                blog_id = Blog.objects.get(id=request.data["blog_id"]),
+                blog_id = Blog.objects.get(id=kwargs['pk']),
                 likes = request.data["likes"],
                 dislike = request.data["dislike"],
                 status = request.data["status"],
@@ -147,22 +167,22 @@ class CommentsApi(viewsets.ViewSet):
                 CommentsSerializer(comments, many=True).data, status=status.HTTP_200_OK
             )
         except Exception as err:
-            print("error Comments get")
+            print("error CommentsApi get")
             return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            comment = Comments.objects.get(id=kwargs["pk"])
+            comment = Comments.objects.get(id=kwargs['pk'])
             return Response(
                 CommentsSerializer(comment).data, status=status.HTTP_200_OK
             )
         except Exception as err:
-            print("error Commentsapi read")
+            print("error CommentsApi read")
             return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def update(self, request, *args, **kwargs):
         try:
-            comment = Comments.objects.get(id=kwargs["pk"])
+            comment = Comments.objects.get(id=kwargs['pk'])
 
             if "comment" in request.data:
                 comment.comment = request.data["comment"]
@@ -190,7 +210,7 @@ class CommentsApi(viewsets.ViewSet):
 
     def destroy(self, request, *args, **kwargs):
         try:
-            comment = Comments.objects.get(id=kwargs["pk"])
+            comment = Comments.objects.get(id=kwargs['pk'])
             comment.delete()
             return Response(
                 status=status.HTTP_200_OK
@@ -200,4 +220,21 @@ class CommentsApi(viewsets.ViewSet):
             return Response({"error": "This Object was Deleted"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@csrf_exempt
+def show_comment(request,id,comment):
+    try:
+        try:
+            blog_id = Blog.objects.get(id=id)
+        except Exception:
+            return JsonResponse({"error": "Invalid blog id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment = Comments(
+            comment = comment,
+            blog_id = blog_id,
+        )
+        comment.save()
+        return JsonResponse(CommentsSerializer(comment).data,status=status.HTTP_201_CREATED)
+    except Exception as err:
+        print("error show_comment create",err)
+        return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
              
