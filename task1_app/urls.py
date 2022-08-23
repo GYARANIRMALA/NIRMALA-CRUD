@@ -11,13 +11,7 @@ router.register("comments", CommentsApi, "Comments")
 
 
 
-
-
-
-
-
-
 urlpatterns = [
     path("", include(router.urls)),
-    path('blog/:<str:id>/<str:comment>/', show_comment),  
+    path('blog/:<str:id>/<str:comment>/', show_comment),
 ]

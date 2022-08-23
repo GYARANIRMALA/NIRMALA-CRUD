@@ -8,7 +8,11 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class CommentsSerializer(serializers.ModelSerializer):
+    len_comment = serializers.SerializerMethodField()
 
     class Meta:
         model = Comments
         fields = "__all__"
+
+    def get_len_comment(self,object):
+        return len(object.comment)

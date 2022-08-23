@@ -49,14 +49,12 @@ class BlogApi(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            print("In blogs list")
             blogs = Blog.objects.filter(active=True).order_by('order')
             blogs_serializer = BlogSerializer(blogs, many=True).data
             try:
                 for data in blogs_serializer:
                     try:
                         comments_list = Comments.objects.filter(blog_id=data["id"])
-                        print("comments_list --->",comments_list)
                         comments_serailizer = CommentsSerializer(comments_list,many=True).data
                         data["comments"] = comments_serailizer
                     except Exception as err:
@@ -74,9 +72,16 @@ class BlogApi(viewsets.ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         try:
-            blog = Blog.objects.get(id=kwargs['pk'])
+            blog = Blog.objects.get(id=kwargs["pk"])
+            blogs_serializer = BlogSerializer(blog).data
+            blogs_serializer["comments"] = []
+            try:
+                comments_list = Comments.objects.filter(blog_id=blogs_serializer["id"])
+                blogs_serializer["comments"] = CommentsSerializer(comments_list,many=True).data
+            except Exception:
+                pass
             return Response(
-                BlogSerializer(blog).data, status=status.HTTP_200_OK
+                blogs_serializer, status=status.HTTP_200_OK
             )
         except Exception as err:
             print("error BlogApis retrieve")
@@ -127,8 +132,7 @@ class BlogApi(viewsets.ViewSet):
             blog = Blog.objects.get(id=kwargs['pk'])
             blog.delete()
             return Response(
-                {"error" : "This Book was Deleted"},
-                status=status.HTTP_200_OK
+                {"error" : "This Book was Deleted"}, status=status.HTTP_200_OK
             )
         except Exception as err:
             print("error BlogApi destroy",err)
@@ -167,7 +171,7 @@ class CommentsApi(viewsets.ViewSet):
                 CommentsSerializer(comments, many=True).data, status=status.HTTP_200_OK
             )
         except Exception as err:
-            print("error CommentsApi get")
+            print("error Commentspi get")
             return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, *args, **kwargs):

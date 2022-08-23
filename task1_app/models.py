@@ -33,12 +33,12 @@ class Comments(models.Model):
     comment = models.CharField(max_length=50,default="")
 
     blog_id = models.ForeignKey(Blog, related_name="blog_id", on_delete=models.CASCADE, null=True, blank=True)
-    likes = models.IntegerField(blank=True,null=True)
-    dislike = models.IntegerField(blank=True,null=True)
+    likes = models.IntegerField(default=0)
+    dislike = models.IntegerField(default=0)
 
     status = models.CharField(max_length=50,default="")
     active = models.BooleanField(default=True)
-    order = models.IntegerField(blank=True,null=True)
+    order = models.IntegerField(default=0)
 
     created_by = models.CharField(max_length=50,default="")
     updated_by = models.CharField(max_length=50,default="")
