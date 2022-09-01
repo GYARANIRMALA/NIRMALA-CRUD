@@ -4,9 +4,10 @@ from task1_app.models import Blog, Comments
 from task1_app.serializers import BlogSerializer, CommentsSerializer
 import requests
 from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt,csrf_protect #Add this
+from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from django.http import HttpResponse, JsonResponse
 import uuid
+from rest_framework.parsers import JSONParser
 
 
 class BlogApi(viewsets.ViewSet):
@@ -139,15 +140,12 @@ class BlogApi(viewsets.ViewSet):
             return Response({"error" : str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 class CommentsApi(viewsets.ViewSet):
-
-    @csrf_exempt
     def create(self, request, *args, **kwargs):
         try:
-            comment = Comments(
+            comment = Comments( 
                 comment = request.data["comment"],
-                blog_id = Blog.objects.get(id=kwargs['pk']),
+                blog_id = Blog.objects.get(id=request.data["blog_id"]),
                 likes = request.data["likes"],
                 dislike = request.data["dislike"],
                 status = request.data["status"],
@@ -166,7 +164,7 @@ class CommentsApi(viewsets.ViewSet):
 
     def list(self, request, *args, **kwargs):
         try:
-            comments = Comments.objects.filter().order_by('comment')
+            comments = Comments.objects.filter().order_by('likes')
             return Response(
                 CommentsSerializer(comments, many=True).data, status=status.HTTP_200_OK
             )
@@ -193,13 +191,21 @@ class CommentsApi(viewsets.ViewSet):
             if "blog_id" in request.data:
                 comment.blog_id = Blog.objects.get(blog_id=request.data["blog_id"])
             if "likes" in request.data:
+                if request.data["likes"] < 0:
+                    return Response({"error": "likes should not accept negative values"}, status=status.HTTP_400_BAD_REQUEST)
                 comment.likes = request.data["likes"]
             if "dislike" in request.data:
+                if request.data["dislike"] < 0:
+                    return Response({"error": "dislike values should not accept negative values"}, status=status.HTTP_400_BAD_REQUEST)
                 comment.dislike = request.data["dislike"]
             if "status" in request.data:
-                comment.status = request.data["status"]
+                return Response({"error": "status should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
             if "active" in request.data:
-                comment.active = request.data["active"]
+                return Response({"error": "active should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
+            if "order" in request.data:
+                if request.data["order"] < 0 :
+                    return Response({"error": "Order should not be negitive"}, status=status.HTTP_400_BAD_REQUEST)
+                comment.order = request.data["order"]
             if "created_by" in request.data:
                 comment.created_by = request.data["created_by"]
             if "updated_by" in request.data:
@@ -225,20 +231,21 @@ class CommentsApi(viewsets.ViewSet):
 
 
 @csrf_exempt
-def show_comment(request,id,comment):
+def show_comment(request,id):
     try:
-        try:
-            blog_id = Blog.objects.get(id=id)
-        except Exception:
-            return JsonResponse({"error": "Invalid blog id"}, status=status.HTTP_400_BAD_REQUEST)
-
-        comment = Comments(
-            comment = comment,
-            blog_id = blog_id,
-        )
-        comment.save()
-        return JsonResponse(CommentsSerializer(comment).data,status=status.HTTP_201_CREATED)
+        if request.method == 'POST':
+            data = JSONParser().parse(request)
+            try:
+                blog_id = Blog.objects.get(id=id)
+            except Exception:
+                return JsonResponse({"error": "Invalid blog id"}, status=status.HTTP_400_BAD_REQUEST)
+            comment = Comments(
+                comment = data["comment"],
+                blog_id = blog_id,
+            )
+            comment.save()
+            return JsonResponse(CommentsSerializer(comment).data,status=status.HTTP_201_CREATED)
     except Exception as err:
         print("error show_comment create",err)
         return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-             
+
