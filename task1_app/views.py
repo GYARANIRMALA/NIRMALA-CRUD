@@ -389,216 +389,26 @@ class UserApi(viewsets.ViewSet):
             return Response({"error": "This user was Deleted"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class LoginView(APIView):
+class LoginApi(viewsets.ViewSet):
+    def create(self, request, *args, **kwargs):
+        try:
+            user = authenticate(
+                email=request.data["email"], password=request.data["password"]
+            )
+            if not user:
+                return Response(
+                    {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
+                )
+            serializer = UserSerializer(user).data
+            response = requests.post(url="http://127.0.0.1:8000/user/api/token/", data={
+                "email" : request.data["email"],
+                "password" :request.data["password"],
+            })
+            token = response.json()
+            serializer["refresh"] = token["refresh"]
+            serializer["access"] = token["access"]
+            return Response(serializer, status=status.HTTP_200_OK)
+        except Exception as err:
+            print("error --->",err)
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
-
-        user = User.objects.filter(email=email).first()
-
-        if user is None:
-            raise AuthenticationFailed('User not found!')
-
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password')
-        
-        payload = {
-            'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
-
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
-        response = Response()
-
-        response.data = ({
-            'jwt': token
-        })
-        return response
-
-
-
-
-#class LoginApi(viewsets.ViewSet):
-
-#     def post(self, request):
-
-#                 email = request.data["email"],
-#                 password = request.data["password"],
-            
-#                 user = User.objects.filter(email=email).first()
-                
-#                 if user is None:
-#                     raise AuthenticationFailed('User not found!')
-                
-#                 if not user.check_password(password):
-#                     raise AuthenticationFailed('Incorrect password')
-                
-#                 payload = {
-#                     'id': user.id,
-#                     'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-#                     'iat': datetime.datetime.utcnow()
-#                 }
-
-#                 token = jwt.encode(payload, 'secret', algorithm='HS256').decode('utc-8')
-#                 return Response({
-#                     'jwt': token
-#                 })
-
-
-
-
-# AuthUser = get_user_model()
-
- # auth_user = AuthUser(
-            #         username=request.data["email"],
-            #         is_superuser=True,
-            #         is_staff=True,
-            #         is_active=True
-            # )
-            # auth_user.set_password("12345")
-            # auth_user.save()
-            # return Response(status=status.HTTP_200_OK)
-        # except Exception as err:
-        #     print("err --->",err)
-        #     return Response({"error":"This Email ID is Already Exist"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-#class UserApi(viewsets.ViewSet):
-
-    # def create(self, request, *args, **kwargs):
-    #     try:
-    #         try:
-    #             User.objects.get(username=request.data["username"])
-    #             return Response({"error": "Given username is already exist"}, status=status.HTTP_400_BAD_REQUEST)
-    #         except Exception:
-    #             pass
-    #         try:
-    #             User.objects.get(email=request.data["email"])
-    #             return Response({"error": "Given email is already exist"}, status=status.HTTP_400_BAD_REQUEST)
-    #         except Exception:
-    #             pass
-    #         try:
-    #             if request.data["role"] not in [User.RoleTypes.admin,User.RoleTypes.support,User.RoleTypes.user]:
-    #                 return Response({"error":"Invalid role"},status=status.HTTP_400_BAD_REQUEST)
-    #         except Exception:
-    #             pass
-    #         try:
-    #             if request.data["status"] not in [User.StatusTypes.inactive,User.StatusTypes.active,User.StatusTypes.blocked]:
-    #                 return Response({"error":"Invalid status"},status=status.HTTP_400_BAD_REQUEST)
-    #         except Exception:
-    #             pass
-
-    #         encrypted_password = encryptPassword(request.data["password"])
-    #         print("encrypted_password --->",encrypted_password)
-
-    #         decrypted_password = encryptPassword(request.data["password"])
-    #         print("decrypted_password --->",decrypted_password)
-
-    #         user = User(
-    #             username = request.data["username"],
-    #             email = request.data["email"],
-    #             password = encrypted_password,
-    #             fullname = request.data["fullname"],
-    #             role = request.data["role"],
-    #             status = request.data["status"],
-    #             active = request.data["active"],
-    #             created_by = request.data["created_by"],
-    #             updated_by = request.data["updated_by"],
-    #         )
-    #         user.save()
-    #         return Response(
-    #             UserSerializer(user).data, status=status.HTTP_201_CREATED
-    #         )
-    #     except Exception as err:
-    #         print("error UserApi create")
-    #         return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # def list(self, request, *args, **kwargs):
-    #     try:
-    #         users = User.objects.filter()
-    #         return Response(
-    #             UserSerializer(users, many=True).data, status=status.HTTP_200_OK
-    #         )
-    #     except Exception as err:
-    #         print("error UserApi get")
-    #         return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     try:
-    #         user = User.objects.get(id=kwargs["pk"])
-    #         return Response(
-    #             UserSerializer(user).data, status=status.HTTP_200_OK
-    #         )
-    #     except Exception as err:
-    #         print("error UserApi retrieve")
-    #         return Response({"error":str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # def update(self, request, *args, **kwargs):
-    #     try:
-    #         user = User.objects.get(id=kwargs["pk"])
-
-    #         if "username" in request.data:
-    #             user.username = request.data["username"]
-    #         if "email" in request.data:
-    #             user.email = request.data["email"]
-    #         if "password" in request.data:
-    #             user.password = request.data["password"]
-    #         if "fullname" in request.data:
-    #             user.fullname = request.data["fullname"]
-    #         if "role" in request.data:
-    #             try:
-    #                 if request.data["role"] not in [User.RoleTypes.admin,User.RoleTypes.support,User.RoleTypes.user]:
-    #                     return Response({"error":"Invalid role"},status=status.HTTP_400_BAD_REQUEST)
-    #             except Exception:
-    #                 pass 
-    #         if "status" in request.data:
-    #             try:
-    #                 if request.data["status"] not in [User.StatusTypes.inactive,User.StatusTypes.active,User.StatusTypes.blocked]:
-    #                     return Response({"error":"Invalid status"},status=status.HTTP_400_BAD_REQUEST)
-    #             except Exception:
-    #                 pass
-    #         if "active" in request.data:
-    #             return Response({"error": "active should not be updated"}, status=status.HTTP_400_BAD_REQUEST)
-    #         if "created_by" in request.data:
-    #             user.created_by = request.data["created_by"]
-    #         if "updated_by" in request.data:
-    #             user.updated_by = request.data["updated_by"]
-    #         user.save()
-    #         return Response(
-    #             UserSerializer(user).data, status=status.HTTP_200_OK
-    #         )
-    #     except Exception as err:
-    #         print("error UserApi update")
-    #         return Response({"error": str(err)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    # def destroy(self, request, *args, **kwargs):
-    #     try:
-    #         user = User.objects.get(id=kwargs["pk"])
-    #         user.delete()
-    #         return Response(
-    #             status=status.HTTP_200_OK
-    #         )
-    #     except Exception as err:
-    #         print("error UserApi delete")
-    #         return Response({"error": "This user was Deleted"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-# class LoginApi(viewsets.ViewSet):
-#     permission_classes = (AllowAny,)
-#     http_method_names = ["head", "post"]
-
-
-#     def create(self, request, *args, **kwargs):
-#         try:
-#             user = authenticate(
-#                 username=request.data["username"], password=request.data["password"]
-#             )
-#             if not user:
-#                 return Response(
-#                     {"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST
-#                 )
-#             return Response(get_token_data(user), status=status.HTTP_200_OK)
-#         except Exception as err:
-#             logging.error(f"Login create: {err}", exc_info=True)
-#             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
