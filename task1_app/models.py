@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
+                                PermissionsMixin
 import uuid
 
 
@@ -47,3 +50,39 @@ class Comments(models.Model):
 
     def __str__(self):
         return self.comment
+
+class User(AbstractBaseUser, PermissionsMixin):
+
+    class RoleTypes(models.TextChoices):
+        admin = "admin"
+        support = "support"
+        user = "user"
+    
+    class StatusTypes(models.TextChoices):
+        inactive = "inactive"
+        active = "active"
+        blocked = "blocked"
+
+    username = models.CharField(max_length=50, unique=True)
+    email = models.EmailField(max_length=50, default="", unique=True)
+    password = models.CharField(max_length=500, default="")		
+    fullname = models.CharField(max_length=50)	
+    role = models.CharField(max_length=50, choices=RoleTypes.choices,default="")		
+		
+    status = models.CharField(max_length=50, choices=StatusTypes.choices,default="")	
+    active = models.BooleanField(default=True)
+		
+    created_by = models.CharField(max_length=50,default="")
+    updated_by = models.CharField(max_length=50,default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # objects = BaseUserManager()
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    def __str__(self):
+        return self.username
+	
+            

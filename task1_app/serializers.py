@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from task1_app.models import Blog, Comments
+from task1_app.models import Blog, Comments, User
 
 class BlogSerializer(serializers.ModelSerializer):
 
@@ -16,3 +16,12 @@ class CommentsSerializer(serializers.ModelSerializer):
 
     def get_len_comment(self,object):
         return len(object.comment)
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        # fields = "__all__"
+        exclude = [
+            "password"
+        ]
