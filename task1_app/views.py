@@ -7,9 +7,6 @@ from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from django.http import HttpResponse, JsonResponse
 import uuid
-
-from django.contrib.auth import authenticate
-
 from rest_framework.parsers import JSONParser
 from django.contrib.auth import get_user_model
 from cryptography.fernet import Fernet

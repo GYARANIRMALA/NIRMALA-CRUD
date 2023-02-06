@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'task1_app',
-    # 'rest_framework.authtoken',
     'rest_framework_simplejwt',
 ]
 

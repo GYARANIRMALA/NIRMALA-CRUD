@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
-                                PermissionsMixin
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 import uuid
 
 
@@ -51,7 +50,16 @@ class Comments(models.Model):
     def __str__(self):
         return self.comment
 
-class User(AbstractBaseUser, PermissionsMixin):
+
+class UserManager(BaseUserManager):
+    def create_superuser(self, **kwargs):
+        user = self.model(email=kwargs["email"])
+        user.set_password(kwargs["password"])
+        user.is_superuser = True
+        user.is_active = True
+        user.save(using=self._db)
+        return user
+class User(AbstractBaseUser, BaseUserManager):
 
     class RoleTypes(models.TextChoices):
         admin = "admin"
@@ -77,7 +85,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    objects = BaseUserManager()
+    objects = UserManager()
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
