@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from task1.configs import config as cfg
 
 
 
@@ -82,11 +83,11 @@ WSGI_APPLICATION = 'task1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'local_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432'
+        'NAME': cfg.get("postgres", "DB_NAME"),
+        'USER': cfg.get("postgres", "DB_USER"),
+        'PASSWORD': cfg.get("postgres", "DB_PASSWORD"),
+        'HOST': cfg.get("postgres", "DB_HOST"),
+        'PORT': cfg.get("postgres", "DB_PORT"),
     }
 }
 
